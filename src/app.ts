@@ -1,18 +1,22 @@
 import express from "express";
+import { assignmentRouter } from "./routes/assignment.routes.js";
 import { taskRouter } from "./routes/task.routes.js";
 
 export const app = express();
 
 app.use(express.json());
 
+app.use("/tasks", assignmentRouter);
 app.use("/api/v1/tasks", taskRouter);
 
 app.get("/", (_request, response) => {
   response.status(200).json({
+    name: "Task API",
+    version: "1.0",
+    endpoints: ["/tasks"],
     status: "ok",
     service: "Todo API",
-    version: "1.0.0",
-    endpoints: [
+    routes: [
       {
         method: "GET",
         path: "/api/v1/health",
@@ -33,6 +37,13 @@ app.get("/", (_request, response) => {
 });
 
 app.get("/api/v1/health", (_request, response) => {
+  response.status(200).json({
+    status: "ok",
+    message: "Todo API is running here",
+  });
+});
+
+app.get("/health", (_request, response) => {
   response.status(200).json({
     status: "ok",
     message: "Todo API is running here",

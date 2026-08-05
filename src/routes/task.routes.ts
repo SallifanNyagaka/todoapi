@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request, type Response } from "express";
 import { z } from "zod";
 import {
   createTask,
@@ -56,7 +56,10 @@ taskRouter.get("/:id", (request, response) => {
   });
 });
 
-taskRouter.patch("/:id", (request, response) => {
+function updateTaskHandler(
+  request: Request<{ id: string }>,
+  response: Response,
+) {
   if (!getTaskById(request.params.id)) {
     return response.status(404).json({
       status: "error",
@@ -101,7 +104,10 @@ taskRouter.patch("/:id", (request, response) => {
     status: "success",
     data: task,
   });
-});
+}
+
+taskRouter.patch("/:id", updateTaskHandler);
+taskRouter.put("/:id", updateTaskHandler);
 
 taskRouter.delete("/:id", (request, response) => {
   const deleted = deleteTask(request.params.id);
