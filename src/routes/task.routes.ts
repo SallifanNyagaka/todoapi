@@ -1,8 +1,12 @@
-import { randomUUID } from "node:crypto";
 import { Router } from "express";
 import { z } from "zod";
-import { tasks } from "../data/task-store.js";
-import type { Task } from "../types/task.js";
+import {
+  createTask,
+  deleteTask,
+  getTaskById,
+  listTasks,
+  updateTask,
+} from "../services/task.service.js";
 
 const createTaskSchema = z
   .object({
@@ -25,17 +29,19 @@ const updateTaskSchema = z
 export const taskRouter = Router();
 
 taskRouter.get("/", (_request, response) => {
+  const taskList = listTasks();
+
   return response.status(200).json({
     status: "success",
-    data: tasks,
+    data: taskList,
     meta: {
-      count: tasks.length,
+      count: taskList.length,
     },
   });
 });
 
 taskRouter.get("/:id", (request, response) => {
-  const task = tasks.find((item) => item.id === request.params.id);
+  const task = getTaskById(request.params.id);
 
   if (!task) {
     return response.status(404).json({
@@ -51,9 +57,7 @@ taskRouter.get("/:id", (request, response) => {
 });
 
 taskRouter.patch("/:id", (request, response) => {
-  const task = tasks.find((item) => item.id === request.params.id);
-
-  if (!task) {
+  if (!getTaskById(request.params.id)) {
     return response.status(404).json({
       status: "error",
       message: "Task not found",
@@ -73,24 +77,43 @@ taskRouter.patch("/:id", (request, response) => {
     });
   }
 
+  const updates: {
+    title?: string;
+    description?: string | null;
+    completed?: boolean;
+  } = {};
+
   if (parsedBody.data.title !== undefined) {
-    task.title = parsedBody.data.title;
+    updates.title = parsedBody.data.title;
   }
 
   if (parsedBody.data.description !== undefined) {
-    task.description = parsedBody.data.description;
+    updates.description = parsedBody.data.description;
   }
 
   if (parsedBody.data.completed !== undefined) {
-    task.completed = parsedBody.data.completed;
+    updates.completed = parsedBody.data.completed;
   }
 
-  task.updatedAt = new Date().toISOString();
+  const task = updateTask(request.params.id, updates);
 
   return response.status(200).json({
     status: "success",
     data: task,
   });
+});
+
+taskRouter.delete("/:id", (request, response) => {
+  const deleted = deleteTask(request.params.id);
+
+  if (!deleted) {
+    return response.status(404).json({
+      status: "error",
+      message: "Task not found",
+    });
+  }
+
+  return response.status(204).send();
 });
 
 taskRouter.post("/", (request, response) => {
@@ -107,17 +130,10 @@ taskRouter.post("/", (request, response) => {
     });
   }
 
-  const now = new Date().toISOString();
-  const task: Task = {
-    id: randomUUID(),
+  const task = createTask({
     title: parsedBody.data.title,
     description: parsedBody.data.description ?? null,
-    completed: false,
-    createdAt: now,
-    updatedAt: now,
-  };
-
-  tasks.push(task);
+  });
 
   return response.status(201).json({
     status: "success",
