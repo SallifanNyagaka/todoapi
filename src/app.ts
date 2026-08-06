@@ -1,4 +1,6 @@
 import express from "express";
+import swaggerUi from "swagger-ui-express";
+import { openapiDocument } from "./docs/openapi.js";
 import { assignmentRouter } from "./routes/assignment.routes.js";
 import { taskRouter } from "./routes/task.routes.js";
 
@@ -6,6 +8,7 @@ export const app = express();
 
 app.use(express.json());
 
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapiDocument));
 app.use("/tasks", assignmentRouter);
 app.use("/api/v1/tasks", taskRouter);
 
