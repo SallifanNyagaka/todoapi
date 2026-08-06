@@ -151,3 +151,44 @@ src/
 ## License
 
 ISC
+
+## AI vs me
+
+The hand-built implementation is the production version in `src/`. The isolated AI implementation is in `ai-version/` and runs on port `3001`.
+
+### Prompt used for the AI version
+
+```text
+Build a small Todo CRUD API in plain JavaScript using Node.js and Express.
+
+Requirements:
+
+- Store data in memory only; do not use a database or files.
+- Use port 3001 by default so this version can run beside another local API.
+- Start with three example tasks. Each task must have a numeric id, string title, and boolean done.
+- Implement GET /, GET /health, GET /tasks, GET /tasks/:id, POST /tasks, PUT /tasks/:id, and DELETE /tasks/:id.
+- POST creates a task from { "title": "..." } and returns 201.
+- PUT updates a title and/or done state and returns 200.
+- DELETE returns 204.
+- Return 400 with a JSON error for invalid POST or PUT input.
+- Return 404 with a JSON error for unknown IDs.
+- Add Swagger UI at /docs documenting all five task endpoints.
+- Keep the implementation self-contained in an ai-version folder with its own package.json.
+- Include simple run instructions.
+```
+
+### Concrete differences
+
+1. The AI version is plain JavaScript with one main `src/server.js` file. The hand-built version uses TypeScript with separate application, route, service, configuration, data, and documentation modules.
+2. The AI version uses numeric IDs and `done`. The hand-built production API uses UUID IDs, `completed`, descriptions, and timestamps. A compatibility adapter exposes the assignment shape at `/tasks`.
+3. The AI version performs manual validation in route handlers and silently ignores unknown fields. The hand-built version uses Zod schemas with strict unknown-field rejection and reusable validation behavior.
+4. The hand-built version validates environment configuration and supports `.env`; the AI version uses a simple `PORT` fallback.
+5. The production OpenAPI document contains detailed schemas, examples, and response definitions. The AI document is smaller and documents fewer response details.
+
+### Result
+
+The AI version passed the Stage 4 checkpoint independently on port `3001`: it returned three seeded tasks, created a task with `201`, read it, updated it with `PUT`, deleted it with `204`, returned `404` for an unknown ID, and served Swagger UI at `/docs/`.
+
+### Improved rematch
+
+The second prompt is in `ai-version-v2/PROMPT.md`, and its generated implementation is in `ai-version-v2/`. The rematch added strict rejection of unknown request fields and validated the configured port after the first version quietly ignored extra fields and accepted any numeric port. It runs on port `3002` and passed the same CRUD checkpoint.

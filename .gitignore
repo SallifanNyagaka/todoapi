@@ -1,3 +1,5 @@
 node_modules/
 dist/
 .env
+ai-version/node_modules/
+ai-version-v2/node_modules/
